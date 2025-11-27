@@ -1,0 +1,23 @@
+Hi! Need to order some stuff for the restaurant
+
+Customer: Maria's Italian Kitchen
+Contact: Maria Rodriguez
+Phone: 555-9876
+Email: maria@italiankitchen.com
+
+Order:
+- 50kg fresh tomatoes @ $3/kg
+- 30kg mozzarella cheese @ $12/kg  
+- 20 boxes of pasta (1kg each) @ $8/box
+- 10L olive oil @ $25/L
+- 5kg fresh basil @ $15/kg
+
+Deliver to:
+Maria's Italian Kitchen
+456 Culinary Street
+New York, NY 10001
+
+Need it by Friday!
+Pay on delivery (COD)
+
+Thanks!
