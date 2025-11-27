@@ -45,7 +45,7 @@ uv pip install -r requirements.txt
 ### Step 4: Run the Application
 
 ```bash
-ollama serve
+ollama serve (In seperate bash/terminal window)
 streamlit run app.py
 ```
 
