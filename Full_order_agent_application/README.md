@@ -79,7 +79,7 @@ ollama list
 ### 1. Clone/Download the Project
 
 ```bash
-cd order_extraction_agent
+cd Full_order_agent_application
 ```
 
 ### 2. Create Virtual Environment
