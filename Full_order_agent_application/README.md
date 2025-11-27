@@ -67,6 +67,7 @@ Verify installation:
 ```bash
 ollama list
 # Should show llama3.2:latest
+ollama serve (In seperate bash)
 ```
 
 ### 3. Python Requirements
@@ -85,13 +86,19 @@ cd Full_order_agent_application
 ### 2. Create Virtual Environment
 
 ```bash
+#Install uv (optional if already done then no need)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+#Refer this website for more details about uv
+https://docs.astral.sh/uv/
+
+# Create virtual environment
 uv venv --python=3.12
 
-# Activate:
-# Linux/Mac:
-source .venv/bin/activate
-# Windows:
-venv\Scripts\activate
+# Activate it
+source venv/bin/activate  # Mac/Linux
+# or
+venv\Scripts\activate  # Windows
 ```
 
 ### 3. Install Dependencies
@@ -103,7 +110,7 @@ uv pip install -r requirements.txt
 ## 📦 Project Structure
 
 ```
-order_extraction_agent/
+Full_order_agent_application/
 ├── README.md
 ├── requirements.txt
 ├── app.py                      # Streamlit UI
