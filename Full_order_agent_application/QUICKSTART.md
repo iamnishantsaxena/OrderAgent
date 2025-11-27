@@ -6,7 +6,7 @@
 
 **macOS/Linux:**
 ```bash
-cd Full_order_agent_application
+cd Full_order_agent_application (mandatory as you need to be inside this folder to run this project hassle free)
 curl -fsSL https://ollama.com/install.sh | sh
 ```
 
