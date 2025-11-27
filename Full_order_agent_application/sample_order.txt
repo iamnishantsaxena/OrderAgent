@@ -1,0 +1,48 @@
+PURCHASE ORDER
+
+From: Tech Solutions Inc.
+Date: January 20, 2024
+PO Number: TS-2024-089
+
+Vendor: Office Supplies Plus
+Attn: Sales Department
+
+Items:
+Product                  Qty    Unit Price    Total
+------------------------------------------------
+Ergonomic Office Chair    15    $350.00      $5,250.00
+Standing Desk            8     $600.00      $4,800.00
+Monitor Arms             15    $80.00       $1,200.00
+LED Desk Lamps          20    $45.00       $900.00
+Cable Management Kit     10    $25.00       $250.00
+
+Subtotal: $12,400.00
+Tax (8%): $992.00
+Shipping: $150.00
+TOTAL: $13,542.00
+
+Shipping Address:
+Tech Solutions Inc.
+789 Innovation Blvd
+Austin, TX 78701
+
+Billing Address:
+Tech Solutions Inc.
+Accounts Payable
+789 Innovation Blvd
+Austin, TX 78701
+
+Payment Terms: Net 45
+Delivery Required By: February 5, 2024
+
+Contact: Sarah Chen
+Email: sarah.chen@techsolutions.com
+Phone: (512) 555-0199
+
+Special Instructions:
+- Deliver to 3rd floor loading dock
+- Call 30 minutes before delivery
+- Assembly required for chairs and desks
+
+Approved by: Sarah Chen, Office Manager
+Date: January 20, 2024

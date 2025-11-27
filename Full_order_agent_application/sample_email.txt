@@ -1,0 +1,43 @@
+From: john.doe@acmecorp.com
+To: orders@supplier.com
+Subject: Urgent Order - IT Equipment
+Date: January 15, 2024
+
+Hi there,
+
+I need to place an urgent order for our new office setup:
+
+CUSTOMER DETAILS:
+Company: Acme Corporation
+Contact: John Doe
+Email: john.doe@acmecorp.com
+Phone: +1-555-123-4567
+
+ORDER ITEMS:
+1. Dell XPS 15 Laptops - Quantity: 10 @ $1,200 each
+2. Logitech MX Master 3 Mouse - Quantity: 10 @ $99 each
+3. HP LaserJet Pro Printer - Quantity: 2 @ $450 each
+4. USB-C Docking Stations - Quantity: 10 @ $250 each
+
+DELIVERY INFORMATION:
+Ship to:
+Acme Corporation
+123 Technology Drive
+San Francisco, CA 94105
+USA
+
+Billing Address: Same as shipping
+
+PAYMENT & TERMS:
+Payment Terms: Net 30
+Purchase Order: PO-2024-0156
+Expected Delivery: January 30, 2024
+
+Notes: Please ensure all items are tested before shipping. We need these urgently for our new office opening on Feb 1st.
+
+Total Amount: $16,380.00
+
+Thanks,
+John Doe
+IT Manager
+Acme Corporation
