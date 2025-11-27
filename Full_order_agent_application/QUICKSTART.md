@@ -2,10 +2,11 @@
 
 ## 🚀 5-Minute Setup
 
-### Step 1: Install Ollama
+### Step 1: Install Ollama (optional if already then no need)
 
 **macOS/Linux:**
 ```bash
+cd Full_order_agent_application
 curl -fsSL https://ollama.com/install.sh | sh
 ```
 
@@ -23,8 +24,14 @@ This will download the Llama 3.2 model (~2GB). Wait for it to complete.
 ### Step 3: Install Python Dependencies
 
 ```bash
+#Install uv (optional if already done then no need)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+#Refer this website for more details about uv
+https://docs.astral.sh/uv/
+
 # Create virtual environment
-python -m venv venv
+uv venv --python=3.12
 
 # Activate it
 source venv/bin/activate  # Mac/Linux
@@ -32,12 +39,13 @@ source venv/bin/activate  # Mac/Linux
 venv\Scripts\activate  # Windows
 
 # Install requirements
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 ### Step 4: Run the Application
 
 ```bash
+ollama serve
 streamlit run app.py
 ```
 
@@ -107,7 +115,7 @@ ollama pull llama3.2:latest
 
 **Fix:**
 ```bash
-pip install --upgrade -r requirements.txt
+uv pip install --upgrade -r requirements.txt
 ```
 
 ## 💡 Tips
