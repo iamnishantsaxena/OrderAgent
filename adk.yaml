@@ -1,6 +1,0 @@
-name: order-intelligence-agent
-version: 1.0.0
-agents:
-  - name: Automated_Purchase_Order_Generation_Agent
-    file: agent.py
-    entrypoint: agent
