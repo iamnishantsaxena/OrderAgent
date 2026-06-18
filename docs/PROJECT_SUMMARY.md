@@ -1,6 +1,6 @@
-# 📦 Order Extraction Agent - Project Summary
+# Order Extraction Agent - Project Summary
 
-## 🎉 Project Complete!
+## Project Complete!
 
 Your complete agentic workflow system for extracting structured orders from unstructured inputs is ready!
 

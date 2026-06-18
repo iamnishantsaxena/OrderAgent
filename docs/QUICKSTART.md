@@ -34,7 +34,7 @@ https://docs.astral.sh/uv/
 uv venv --python=3.12
 
 # Activate it
-source venv/bin/activate  # Mac/Linux
+source .venv/bin/activate  # Mac/Linux
 # or
 venv\Scripts\activate  # Windows
 
