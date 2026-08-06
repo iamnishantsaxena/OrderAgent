@@ -13,14 +13,14 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.callbacks import StreamingStdOutCallbackHandler
 from langchain_core.agents import AgentAction, AgentFinish
 
-from schema import (
+from .schema import (
     Order, ExtractionResult, OrderItem,
     validate_order_completeness, calculate_overall_confidence,
     CRITICAL_FIELDS, CONFIDENCE_THRESHOLD_HIGH
 )
-from tools import AGENT_TOOLS
-from prompts import SYSTEM_PROMPT, get_extraction_prompt
-from pdf_processor import PDFProcessor
+from .tools import AGENT_TOOLS
+from .prompts import SYSTEM_PROMPT, get_extraction_prompt
+from .pdf_processor import PDFProcessor
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -222,7 +222,7 @@ class OrderExtractionAgent:
         refined = initial_data.copy()
         
         # Import tool functions
-        from tools import (
+        from .tools import (
             extract_customer_info, extract_items, extract_addresses,
             extract_dates, extract_financial_info
         )
@@ -262,7 +262,7 @@ class OrderExtractionAgent:
     
     def _validate_extraction(self, data: Dict) -> Dict[str, Any]:
         """Validate the extracted data"""
-        from tools import validate_order_data
+        from .tools import validate_order_data
         
         validation_result = validate_order_data.invoke({
             "order_json": json.dumps(data)
@@ -272,7 +272,7 @@ class OrderExtractionAgent:
     
     def _calculate_confidence(self, data: Dict, original_text: str) -> Dict[str, float]:
         """Calculate confidence scores for extracted fields"""
-        from tools import calculate_confidence
+        from .tools import calculate_confidence
         
         confidence_result = calculate_confidence.invoke({
             "extracted_data": json.dumps(data),

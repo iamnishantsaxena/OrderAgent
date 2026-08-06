@@ -14,8 +14,8 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from agent import OrderExtractionAgent
-from pdf_processor import PDFValidator
+from src.agent import OrderExtractionAgent
+from src.pdf_processor import PDFValidator
 
 # Page configuration
 st.set_page_config(

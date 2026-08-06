@@ -110,9 +110,9 @@ uv pip install -r requirements.txt
 ## 📦 Project Structure
 
 ```
-Full_order_agent_application/
 ├── README.md
 ├── requirements.txt
+Full_order_agent_application/
 ├── app.py                      # Streamlit UI
 ├── src/
 │   ├── __init__.py
