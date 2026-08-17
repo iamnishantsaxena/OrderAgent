@@ -53,7 +53,7 @@ def extract_customer_info(text: str) -> str:
     # Look for name patterns
     name_keywords = ['from:', 'customer:', 'name:', 'client:', 'contact:', 'attn:']
     for keyword in name_keywords:
-        pattern = rf'{keyword}\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)'
+        pattern = rf'{keyword}\s*([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+)*)'
         matches = re.findall(pattern, text, re.IGNORECASE)
         if matches:
             result["customer_name"] = matches[0].strip()
@@ -267,7 +267,7 @@ def extract_financial_info(text: str) -> str:
     
     # Extract total amount
     total_patterns = [
-        r'total:\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)',
+        r'\btotal:\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)',
         r'grand total:\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)',
         r'amount due:\s*\$?(\d+(?:,\d{3})*(?:\.\d{2})?)',
     ]

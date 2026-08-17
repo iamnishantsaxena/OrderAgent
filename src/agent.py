@@ -9,17 +9,13 @@ from typing import Dict, Any, List, Optional, Iterator
 from datetime import datetime
 
 from langchain_ollama import OllamaLLM
-from langchain_core.prompts import PromptTemplate
-from langchain_core.callbacks import StreamingStdOutCallbackHandler
-from langchain_core.agents import AgentAction, AgentFinish
 
 from .schema import (
     Order, ExtractionResult, OrderItem,
     validate_order_completeness, calculate_overall_confidence,
     CRITICAL_FIELDS, CONFIDENCE_THRESHOLD_HIGH
 )
-from .tools import AGENT_TOOLS
-from .prompts import SYSTEM_PROMPT, get_extraction_prompt
+from .prompts import get_extraction_prompt
 from .pdf_processor import PDFProcessor
 
 logging.basicConfig(level=logging.INFO)
@@ -82,56 +78,65 @@ class OrderExtractionAgent:
         """
         logger.info(f"Starting order extraction from {source_type}")
         self.extraction_steps = []
-        
+
         try:
             # Step 1: Initial extraction using LLM
             self._log_step("Analyzing input and extracting fields")
             extracted_data = self._extract_with_llm(input_text)
-            
-            # Step 2: Use tools for specific field extraction
-            self._log_step("Refining extraction with specialized tools")
-            refined_data = self._refine_with_tools(input_text, extracted_data)
-            
-            # Step 3: Validate extracted data
-            self._log_step("Validating extracted data")
-            validation_result = self._validate_extraction(refined_data)
-            
-            # Step 4: Calculate confidence scores
-            self._log_step("Calculating confidence scores")
-            confidence_scores = self._calculate_confidence(refined_data, input_text)
-            
-            # Step 5: Create final order object
-            self._log_step("Building final order structure")
-            order = self._build_order(refined_data)
-            
-            # Step 6: Determine if order can be created
-            is_valid, missing_critical = validate_order_completeness(order)
-            
-            # Calculate overall confidence
-            overall_confidence = calculate_overall_confidence(confidence_scores)
-            
-            # Build result
-            result = ExtractionResult(
-                can_create_order=is_valid,
-                confidence=overall_confidence,
-                missing_fields=missing_critical,
-                order=order,
-                field_confidence=confidence_scores,
-                warnings=validation_result.get("warnings", []),
-                extraction_metadata={
-                    "source_type": source_type,
-                    "model": self.model_name,
-                    "timestamp": datetime.now().isoformat(),
-                    "steps": self.extraction_steps
-                }
-            )
-            
-            logger.info(f"Extraction complete. Can create order: {is_valid}")
-            return result.model_dump()
-            
+
+            return self._run_pipeline(extracted_data, input_text, source_type)
+
         except Exception as e:
             logger.error(f"Error during extraction: {e}")
             return self._create_error_result(str(e))
+
+    def _run_pipeline(
+        self,
+        extracted_data: Dict[str, Any],
+        input_text: str,
+        source_type: str
+    ) -> Dict[str, Any]:
+        """Steps 2-6: refine, validate, score, build, assemble. Shared by text and PDF paths."""
+        # Step 2: Use tools for specific field extraction
+        self._log_step("Refining extraction with specialized tools")
+        refined_data = self._refine_with_tools(input_text, extracted_data)
+
+        # Step 3: Validate extracted data
+        self._log_step("Validating extracted data")
+        validation_result = self._validate_extraction(refined_data)
+
+        # Step 4: Calculate confidence scores
+        self._log_step("Calculating confidence scores")
+        confidence_scores = self._calculate_confidence(refined_data, input_text)
+
+        # Step 5: Create final order object
+        self._log_step("Building final order structure")
+        order = self._build_order(refined_data)
+
+        # Step 6: Determine if order can be created
+        is_valid, missing_critical = validate_order_completeness(order)
+
+        # Calculate overall confidence
+        overall_confidence = calculate_overall_confidence(confidence_scores)
+
+        # Build result
+        result = ExtractionResult(
+            can_create_order=is_valid,
+            confidence=overall_confidence,
+            missing_fields=missing_critical,
+            order=order,
+            field_confidence=confidence_scores,
+            warnings=validation_result.get("warnings", []),
+            extraction_metadata={
+                "source_type": source_type,
+                "model": self.model_name,
+                "timestamp": datetime.now().isoformat(),
+                "steps": self.extraction_steps
+            }
+        )
+
+        logger.info(f"Extraction complete. Can create order: {is_valid}")
+        return result.model_dump()
     
     def extract_order_streaming(
         self,
@@ -217,6 +222,37 @@ class OrderExtractionAgent:
                 "raw_response": response
             }
     
+    def _extract_with_llm_chunked(self, chunks: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Run LLM extraction per chunk and merge (PDFs too long for one prompt)"""
+        merged: Dict[str, Any] = {}
+        all_items = []
+
+        for chunk in chunks:
+            self._log_step(f"Analyzing chunk {chunk['chunk_id'] + 1}/{len(chunks)}")
+            data = self._extract_with_llm(chunk["text"])
+
+            items = data.pop("items", None)
+            if items:
+                all_items.extend(items)
+
+            for key, value in data.items():
+                if value and not merged.get(key):
+                    merged[key] = value
+
+        merged["items"] = self._dedupe_items(all_items)
+        return merged
+
+    def _dedupe_items(self, items: List[Dict]) -> List[Dict]:
+        """Drop items repeated across overlapping chunks"""
+        seen = set()
+        deduped = []
+        for item in items:
+            key = (item.get("name"), item.get("quantity"), item.get("price"))
+            if key not in seen:
+                seen.add(key)
+                deduped.append(item)
+        return deduped
+
     def _refine_with_tools(self, text: str, initial_data: Dict) -> Dict[str, Any]:
         """Use tools to refine and fill gaps in extracted data"""
         refined = initial_data.copy()
@@ -378,24 +414,40 @@ class OrderExtractionAgent:
             Extraction result
         """
         logger.info("Processing PDF file")
-        
+
         # Process PDF
         pdf_result = self.pdf_processor.process_pdf(pdf_file)
-        
+
         if not pdf_result["success"]:
             return self._create_error_result(f"PDF processing failed: {pdf_result.get('error')}")
-        
+
         # Extract from text
         text = pdf_result["text"]
-        
+        table_text = ""
+
         # Add table data if present
         if pdf_result["tables"]:
             table_text = self.pdf_processor.format_tables_as_text(pdf_result["tables"])
             text = f"{text}\n\n{table_text}"
-        
-        # Extract order
-        result = self.extract_order(text, source_type="pdf")
-        
+
+        self.extraction_steps = []
+        try:
+            chunks = pdf_result["chunks"]
+            if len(chunks) > 1:
+                logger.info(f"PDF split into {len(chunks)} chunks for extraction")
+                if table_text:
+                    # keep tables visible to the LLM by folding them into the last chunk
+                    chunks = chunks[:-1] + [{**chunks[-1], "text": chunks[-1]["text"] + "\n\n" + table_text}]
+                extracted_data = self._extract_with_llm_chunked(chunks)
+            else:
+                self._log_step("Analyzing input and extracting fields")
+                extracted_data = self._extract_with_llm(text)
+
+            result = self._run_pipeline(extracted_data, text, source_type="pdf")
+        except Exception as e:
+            logger.error(f"Error during PDF extraction: {e}")
+            result = self._create_error_result(str(e))
+
         # Add PDF metadata
         result["extraction_metadata"]["pdf_info"] = {
             "num_pages": pdf_result["metadata"].get("num_pages"),
