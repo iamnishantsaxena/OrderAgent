@@ -9,11 +9,13 @@ from datetime import datetime
 from typing import Dict, List, Optional
 from pathlib import Path
 
+from .config import config
+
 
 class OrderDatabase:
     """SQLite database for storing extracted orders"""
-    
-    def __init__(self, db_path: str = "database/orders.db"):
+
+    def __init__(self, db_path: str = config.DATABASE_PATH):
         """
         Initialize database connection
         

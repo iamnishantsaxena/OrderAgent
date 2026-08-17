@@ -17,6 +17,7 @@ from .schema import (
 )
 from .prompts import get_extraction_prompt
 from .pdf_processor import PDFProcessor
+from .config import config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -29,9 +30,9 @@ class OrderExtractionAgent:
     
     def __init__(
         self,
-        model_name: str = "llama3.2:latest",
-        temperature: float = 0.1,
-        ollama_base_url: str = "http://localhost:11434",
+        model_name: str = config.DEFAULT_MODEL,
+        temperature: float = config.LLM_TEMPERATURE,
+        ollama_base_url: str = config.OLLAMA_BASE_URL,
         verbose: bool = True
     ):
         """
@@ -56,7 +57,10 @@ class OrderExtractionAgent:
         )
         
         # Initialize PDF processor
-        self.pdf_processor = PDFProcessor()
+        self.pdf_processor = PDFProcessor(
+            chunk_size=config.PDF_CHUNK_SIZE,
+            chunk_overlap=config.PDF_CHUNK_OVERLAP
+        )
         
         # Agent state
         self.extraction_steps = []
