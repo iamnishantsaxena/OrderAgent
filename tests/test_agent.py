@@ -10,7 +10,7 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.agent import OrderExtractionAgent
+from src.agent import OrderExtractionPipeline
 
 
 def print_section(title: str):
@@ -36,7 +36,7 @@ def print_result_summary(result: dict):
             print(f"  {idx}. {item['name']} - Qty: {item['quantity']} @ ${item.get('price', 0):.2f}")
 
 
-def test_sample_file(agent: OrderExtractionAgent, file_path: Path):
+def test_sample_file(agent: OrderExtractionPipeline, file_path: Path):
     """Test a sample input file"""
     print_section(f"Testing: {file_path.name}")
     
@@ -80,7 +80,7 @@ def main():
     # Initialize agent
     print("Initializing agent...")
     try:
-        agent = OrderExtractionAgent(
+        agent = OrderExtractionPipeline(
             model_name="llama3.2:latest",
             temperature=0.1,
             verbose=False

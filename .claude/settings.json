@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(lsof -ti:8511 -sTCP:LISTEN)",
+      "Bash(xargs -r kill)"
+    ]
+  }
+}

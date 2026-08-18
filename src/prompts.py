@@ -17,11 +17,6 @@ Instructions:
 6. Extract reference numbers (PO, invoice, order numbers)
 7. Note any special instructions or comments
 
-For each field you extract, mentally assess your confidence:
-- HIGH (0.8-1.0): Information is explicitly stated and clear
-- MEDIUM (0.5-0.7): Information is implied or partially stated
-- LOW (0.0-0.4): Information is ambiguous or uncertain
-
 Output Format:
 Provide a JSON object with the following structure:
 {{
@@ -45,12 +40,7 @@ Provide a JSON object with the following structure:
   "total_amount": number or null,
   "currency": "USD/EUR/etc",
   "order_number": "PO/order number or null",
-  "notes": "any special instructions or null",
-  "confidence_scores": {{
-    "customer_name": 0.0-1.0,
-    "items": 0.0-1.0,
-    "addresses": 0.0-1.0
-  }}
+  "notes": "any special instructions or null"
 }}
 
 Remember: Only extract what is present. Use null for missing information."""

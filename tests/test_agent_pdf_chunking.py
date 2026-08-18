@@ -8,12 +8,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.agent import OrderExtractionAgent
+from src.agent import OrderExtractionPipeline
 
 
 def make_agent():
-    # OrderExtractionAgent.__init__ only configures the client, no network call
-    return OrderExtractionAgent()
+    # OrderExtractionPipeline.__init__ only configures the client, no network call
+    return OrderExtractionPipeline()
 
 
 def test_dedupe_items_drops_exact_repeats():

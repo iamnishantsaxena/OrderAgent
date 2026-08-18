@@ -4,7 +4,7 @@ Defines the structured output format for extracted orders
 """
 
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from datetime import datetime
 from enum import Enum
 
@@ -49,17 +49,16 @@ class OrderItem(BaseModel):
             self.subtotal = round(self.price * self.quantity, 2)
         return self
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "name": "Laptop Pro 15",
-                "quantity": 5,
-                "unit": "pcs",
-                "price": 1000.00,
-                "subtotal": 5000.00,
-                "sku": "LAP-PRO-15"
-            }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "name": "Laptop Pro 15",
+            "quantity": 5,
+            "unit": "pcs",
+            "price": 1000.00,
+            "subtotal": 5000.00,
+            "sku": "LAP-PRO-15"
         }
+    })
 
 
 class CustomerInfo(BaseModel):
@@ -136,24 +135,23 @@ class Order(BaseModel):
             self.total_amount = round(total, 2) if total > 0 else None
         return self
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "customer_name": "John Doe",
-                "customer_email": "john@example.com",
-                "items": [
-                    {
-                        "name": "Widget A",
-                        "quantity": 10,
-                        "price": 25.00,
-                        "subtotal": 250.00
-                    }
-                ],
-                "shipping_address": "123 Main St, City, State 12345",
-                "total_amount": 250.00,
-                "currency": "USD"
-            }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "customer_name": "John Doe",
+            "customer_email": "john@example.com",
+            "items": [
+                {
+                    "name": "Widget A",
+                    "quantity": 10,
+                    "price": 25.00,
+                    "subtotal": 250.00
+                }
+            ],
+            "shipping_address": "123 Main St, City, State 12345",
+            "total_amount": 250.00,
+            "currency": "USD"
         }
+    })
 
 
 class ExtractionResult(BaseModel):
@@ -172,23 +170,22 @@ class ExtractionResult(BaseModel):
         description="Metadata about extraction process"
     )
     
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "can_create_order": True,
-                "confidence": 0.85,
-                "missing_fields": ["delivery_date"],
-                "order": {
-                    "customer_name": "Acme Corp",
-                    "items": [{"name": "Product X", "quantity": 5, "price": 100}],
-                    "total_amount": 500
-                },
-                "field_confidence": {
-                    "customer_name": 0.95,
-                    "items": 0.90
-                }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "can_create_order": True,
+            "confidence": 0.85,
+            "missing_fields": ["delivery_date"],
+            "order": {
+                "customer_name": "Acme Corp",
+                "items": [{"name": "Product X", "quantity": 5, "price": 100}],
+                "total_amount": 500
+            },
+            "field_confidence": {
+                "customer_name": 0.95,
+                "items": 0.90
             }
         }
+    })
 
 
 # Required fields for order creation

@@ -14,8 +14,10 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.agent import OrderExtractionAgent
+from src.agent import OrderExtractionPipeline
 from src.pdf_processor import PDFValidator
+from src.database import OrderDatabase
+from src.config import config
 
 # Page configuration
 st.set_page_config(
@@ -96,7 +98,7 @@ def initialize_agent():
     if st.session_state.agent is None:
         with st.spinner("Initializing agent... (This may take a moment)"):
             try:
-                st.session_state.agent = OrderExtractionAgent(
+                st.session_state.agent = OrderExtractionPipeline(
                     model_name=st.session_state.get("model_name", "llama3.2:latest"),
                     temperature=st.session_state.get("temperature", 0.1),
                     verbose=True
@@ -450,41 +452,37 @@ Payment: Net 30
             status_text = st.empty()
             
             try:
+                status_text.text("🤖 Extracting information...")
+
+                # Both branches now yield identically-shaped progress events, so a
+                # long PDF (split into multiple chunks) shows real progress instead
+                # of a fake jump to 100%.
                 if pdf_file:
-                    # Process PDF
-                    status_text.text("📄 Processing PDF...")
-                    progress_bar.progress(20)
-                    
-                    result = st.session_state.agent.process_pdf(pdf_file)
-                    progress_bar.progress(100)
-                    status_text.text("✅ Complete!")
-                
+                    stream = st.session_state.agent.process_pdf_streaming(pdf_file)
                 else:
-                    # Process text with streaming
-                    status_text.text("🤖 Extracting information...")
-                    
-                    step_progress = 0
-                    for update in st.session_state.agent.extract_order_streaming(input_text):
-                        status = update.get("status")
-                        
-                        if status == "progress":
-                            step = update.get("step", 0)
-                            total = update.get("total_steps", 5)
-                            progress = int((step / total) * 100)
-                            progress_bar.progress(progress)
-                        
-                        elif status in ["extracting", "refining", "validating", "scoring", "finalizing"]:
-                            status_text.text(f"🔄 {update.get('message')}")
-                        
-                        elif status == "complete":
-                            result = update.get("result")
-                            progress_bar.progress(100)
-                            status_text.text("✅ Complete!")
-                            break
-                        
-                        elif status == "error":
-                            st.error(f"Error: {update.get('error')}")
-                            st.stop()
+                    stream = st.session_state.agent.extract_order_streaming(input_text)
+
+                for update in stream:
+                    status = update.get("status")
+
+                    if status == "progress":
+                        step = update.get("step", 0)
+                        total = update.get("total_steps", 5)
+                        progress = int((step / total) * 100)
+                        progress_bar.progress(progress)
+
+                    elif status in ["extracting", "refining", "validating", "scoring", "finalizing"]:
+                        status_text.text(f"🔄 {update.get('message')}")
+
+                    elif status == "complete":
+                        result = update.get("result")
+                        progress_bar.progress(100)
+                        status_text.text("✅ Complete!")
+                        break
+
+                    elif status == "error":
+                        st.error(f"Error: {update.get('error')}")
+                        st.stop()
                 
                 time.sleep(0.5)  # Brief pause to show completion
                 progress_container.empty()
@@ -507,9 +505,9 @@ Payment: Net 30
         st.markdown("## 📊 Extraction Results")
         display_result(st.session_state.extraction_result)
         
-        # Download button
+        # Download / save buttons
         st.markdown("---")
-        col1, col2 = st.columns([1, 4])
+        col1, col2, col3 = st.columns([1, 1, 3])
         with col1:
             json_str = json.dumps(st.session_state.extraction_result, indent=2)
             st.download_button(
@@ -519,6 +517,20 @@ Payment: Net 30
                 mime="application/json",
                 use_container_width=True
             )
+        with col2:
+            if st.button(
+                "💾 Save to Database",
+                use_container_width=True,
+                disabled=not config.ENABLE_DATABASE,
+                help=None if config.ENABLE_DATABASE else "Set ENABLE_DATABASE=true to enable"
+            ):
+                try:
+                    db = OrderDatabase(config.DATABASE_PATH)
+                    order_id = db.save_order(st.session_state.extraction_result)
+                    db.close()
+                    st.success(f"✅ Saved order (id {order_id})")
+                except Exception as e:
+                    st.error(f"❌ Save failed: {e}")
 
 
 if __name__ == "__main__":

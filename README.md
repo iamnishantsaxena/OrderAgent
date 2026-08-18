@@ -1,193 +1,99 @@
-# 🤖 Agentic Order Extraction System
+# Order Extraction Agent
 
-An intelligent workflow system that automatically extracts structured order information from unstructured inputs (emails, PDFs, text) using Ollama (Llama 3.2), LangChain, and Streamlit.
+A Streamlit app that extracts structured order data — customer info, line items, addresses, totals — from
+unstructured input (pasted email/text or an uploaded PDF) using a local Ollama LLM, backstopped by a layer of
+regex/pattern-matching for whatever the model misses. All processing is local; nothing is sent to an external
+API.
 
-## 🏗️ Architecture Overview
+## What it does
 
-```
-┌─────────────────┐
-│   Input Layer   │  (PDF/Text/Email)
-└────────┬────────┘
-         │
-┌────────▼────────┐
-│  PDF Processor  │  (PyPDF2 + Chunking)
-└────────┬────────┘
-         │
-┌────────▼────────┐
-│  LangChain      │  (Agent Orchestration)
-│  Agent Layer    │  - Field Extraction
-│                 │  - Validation
-│                 │  - Confidence Scoring
-└────────┬────────┘
-         │
-┌────────▼────────┐
-│  Ollama LLM     │  (llama3.2:latest)
-│  (Local)        │
-└────────┬────────┘
-         │
-┌────────▼────────┐
-│ Output Parser   │  (Structured JSON)
-└────────┬────────┘
-         │
-┌────────▼────────┐
-│  Streamlit UI   │  (Interactive Interface)
-└─────────────────┘
-```
+1. **LLM extraction** — the input text goes to a local Ollama model (`llama3.2:latest` by default) with a
+   single prompt asking for a structured JSON response.
+2. **Regex-tool refinement** — for any field the LLM left empty, a matching regex/heuristic function fills the
+   gap (customer info, items, addresses, dates, financial details).
+3. **Validation** — checks required fields are present and values are sane (positive quantities, valid dates,
+   non-negative totals).
+4. **Confidence scoring** — each field gets a score based on whether it matches the source text verbatim
+   (a heuristic, not a model judgment).
+5. **Assembly** — the result is packaged into a validated `Order` object with auto-calculated subtotals/totals.
 
-## ✨ Features
+For long PDFs, step 1 runs once per chunk and the results are merged, so the app isn't limited to what fits in
+one prompt. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full technical breakdown.
 
-- ✅ Multi-format input support (PDF, text, email)
-- ✅ Intelligent field extraction with confidence scoring
-- ✅ Agentic workflow with tool calling
-- ✅ Structured JSON output with validation
-- ✅ Real-time streaming in UI
-- ✅ Debug panel showing reasoning steps
-- ✅ Fallback handling for missing data
-- ✅ Sample test data included
-- ✅ Optional database storage (SQLite)
+## Use cases
 
-## 📋 Prerequisites
+- **E-commerce**: turn a customer's order email into structured data for a fulfillment system.
+- **B2B purchase orders**: pull line items and terms out of a vendor's PO PDF.
+- **Casual/WhatsApp orders**: parse informal, chat-style order messages.
+- **Invoice/manifest processing**: extract totals and item lists from scanned or exported documents.
 
-### 1. Install Ollama
+## Prerequisites
+
+- **Ollama**, running locally with a model pulled:
+
+  ```bash
+  # macOS/Linux
+  curl -fsSL https://ollama.com/install.sh | sh
+
+  ollama pull llama3.2:latest
+  ollama serve   # in a separate terminal, if not already running
+  ```
+
+- **Python 3.12** and [uv](https://docs.astral.sh/uv/) (recommended) or `pip`.
+
+## Installation
+
+Run from the repo root:
 
 ```bash
-# macOS/Linux
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Or download from https://ollama.com/download
-```
-
-### 2. Pull Llama 3.2 Model
-
-```bash
-ollama pull llama3.2:latest
-```
-
-Verify installation:
-```bash
-ollama list
-# Should show llama3.2:latest
-ollama serve (In seperate bash)
-```
-
-### 3. Python Requirements
-
-- Python 3.9+
-- pip package manager
-
-## 🚀 Installation
-
-### 1. Clone/Download the Project
-
-```bash
-cd Full_order_agent_application
-```
-
-### 2. Create Virtual Environment
-
-```bash
-#Install uv (optional if already done then no need)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-#Refer this website for more details about uv
-https://docs.astral.sh/uv/
-
-# Create virtual environment
+# Create and activate a virtual environment
 uv venv --python=3.12
+source .venv/bin/activate        # macOS/Linux
+# .venv\Scripts\activate         # Windows
 
-# Activate it
-source venv/bin/activate  # Mac/Linux
-# or
-venv\Scripts\activate  # Windows
-```
-
-### 3. Install Dependencies
-
-```bash
+# Install dependencies (this venv has no pip binary — use `uv pip`, not `pip`/`pip3`)
 uv pip install -r requirements.txt
 ```
 
-## 📦 Project Structure
-
-```
-├── README.md
-├── requirements.txt
-Full_order_agent_application/
-├── app.py                      # Streamlit UI
-├── src/
-│   ├── __init__.py
-│   ├── agent.py                # LangChain Agent
-│   ├── pdf_processor.py        # PDF handling
-│   ├── schema.py               # Output schemas
-│   ├── tools.py                # Agent tools
-│   └── prompts.py              # LLM prompts
-├── tests/
-│   ├── sample_inputs/
-│   │   ├── sample_email.txt
-│   │   ├── sample_whatsapp.txt
-│   │   ├── sample_invoice.pdf
-│   │   └── sample_order.txt
-│   └── test_agent.py
-├── database/
-│   └── orders.db               # SQLite (auto-created)
-└── logs/
-    └── agent.log               # Debug logs
-```
-
-## 🎯 Usage
-
-### Starting the Application
+## Running the app
 
 ```bash
 streamlit run app.py
 ```
 
-The app will open at `http://localhost:8501`
+Opens at `http://localhost:8501`. In the sidebar, pick a model/temperature and click **Initialize Agent**,
+then either upload a PDF or paste text and click **Generate Order JSON**.
 
-### Using the Interface
-
-1. **Choose Input Method:**
-   - Upload a PDF document
-   - Paste email/text content
-   
-2. **Click "Generate Order JSON"**
-
-3. **View Results:**
-   - Structured JSON output
-   - Field confidence scores
-   - Missing field alerts
-   - Debug panel with reasoning
-
-### Programmatic Usage
+## Programmatic usage
 
 ```python
-from src.agent import OrderExtractionAgent
+from src.agent import OrderExtractionPipeline
 
-# Initialize agent
-agent = OrderExtractionAgent()
+pipeline = OrderExtractionPipeline()
 
-# Extract from text
-text = "Order from John Doe, 5 laptops at $1000 each..."
-result = agent.extract_order(text)
+text = "Order from John Doe, 5 laptops at $1000 each, ship to 123 Main St"
+result = pipeline.extract_order(text)
 
-print(result['order'])
+if result["can_create_order"]:
+    print(result["order"])
+else:
+    print("Missing fields:", result["missing_fields"])
 ```
 
-## 🧪 Testing
+`process_pdf(pdf_file)` does the same for a PDF path or file-like object. Both also have streaming variants
+(`extract_order_streaming`, `process_pdf_streaming`) that yield progress dicts as extraction proceeds — see
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full API reference, or `usage_examples.py` for more
+end-to-end examples (batch processing, database storage, confidence filtering).
 
-Run the test suite:
+## Testing
 
 ```bash
-python -m pytest tests/
+pytest tests/                  # unit tests — pure functions and mocked LLM calls, no Ollama needed
+python tests/test_agent.py     # integration smoke test — runs tests/sample_inputs/*.txt through the
+                                # live pipeline against a real Ollama instance
 ```
 
-Test with sample data:
-
-```bash
-python tests/test_agent.py
-```
-
-## 📊 Output Schema
+## Output schema
 
 ```json
 {
@@ -209,11 +115,9 @@ python tests/test_agent.py
     "shipping_address": "123 Main St, City, State 12345",
     "billing_address": "Same as shipping",
     "payment_terms": "Net 30",
-    "delivery_date": null,
     "order_date": "2024-01-15",
     "total_amount": 5000.00,
     "currency": "USD",
-    "notes": "",
     "extras": {}
   },
   "field_confidence": {
@@ -224,111 +128,102 @@ python tests/test_agent.py
 }
 ```
 
-## 🔧 Configuration
+## Configuration
 
-Edit `src/agent.py` to customize:
-
-- LLM temperature and parameters
-- Confidence thresholds
-- Required vs optional fields
-- Validation rules
-- Output format
-
-## 🐛 Troubleshooting
-
-### Ollama Connection Issues
+Settings are env-var driven via `src/config.py`:
 
 ```bash
-# Check if Ollama is running
-ollama list
-
-# Restart Ollama service
-# (Method varies by OS)
+export OLLAMA_BASE_URL="http://localhost:11434"
+export OLLAMA_MODEL="llama3.2:latest"
+export LLM_TEMPERATURE="0.1"
+export PDF_CHUNK_SIZE="2000"          # characters per chunk before a PDF gets split across multiple LLM calls
+export DATABASE_PATH="database/orders.db"
+export ENABLE_DATABASE="true"         # turns on the "Save to Database" button in the UI
+export APP_ENV="production"           # development (default) | production | testing
 ```
 
-### Model Not Found
+A bad value raises `ValueError` on import rather than failing silently at runtime.
 
+## Troubleshooting
+
+**"Connection refused" / can't reach Ollama**
+```bash
+ollama list          # confirms Ollama is running and shows pulled models
+ollama serve          # start it if not running
+```
+
+**Model not found**
 ```bash
 ollama pull llama3.2:latest
 ```
 
-### Slow Performance
+**Slow extraction**
+- Use a smaller model: `ollama pull llama3.2:1b`, then select it in the sidebar.
+- Lower `PDF_CHUNK_SIZE` for large PDFs — smaller chunks mean smaller/faster individual LLM calls, at the cost
+  of more of them.
 
-- Reduce PDF chunk size in `pdf_processor.py`
-- Lower max_tokens in agent configuration
-- Use a smaller model: `ollama pull llama3.2:1b`
+## Customization
 
-### Memory Issues
-
-- Process PDFs in smaller chunks
-- Reduce context window size
-- Close other applications
-
-## 🎨 Customization
-
-### Adding Custom Fields
-
-Edit `src/schema.py`:
-
+**Add a field to the schema** — edit `src/schema.py`:
 ```python
-class OrderSchema(BaseModel):
-    # Add your custom field
+class Order(BaseModel):
+    ...
     custom_field: Optional[str] = None
 ```
+(Or use the existing `extras: Dict[str, Any]` field if you don't want a schema change.)
 
-### Custom Validation Rules
+**Add a validation rule** — `src/tools.py`'s `validate_order_data(order: dict) -> dict` returns
+`{"valid": bool, "errors": [...], "warnings": [...], "can_create_order": bool}`; add a check inside it, or add
+a similar plain function and call it from `OrderExtractionPipeline._validate_extraction` in `src/agent.py`.
 
-Edit `src/tools.py`:
+## Security notes
 
-```python
-def validate_order(order_data):
-    # Add your validation logic
-    if not order_data.get('custom_field'):
-        return False, "Custom field required"
-    return True, ""
+- All inference is local — `OllamaLLM` (pointed at `localhost:11434` by default) is the only network client in
+  `src/`. No text ever leaves the machine.
+- PDF uploads are validated (magic-byte check, size limit) before processing, via `PDFValidator` in
+  `src/pdf_processor.py`.
+- Database writes use parameterized queries (no raw SQL string interpolation).
+- Not hardened for multi-tenant/production deployment as-is — no auth, no rate limiting.
+
+## Project structure
+
+```
+app.py                   # Streamlit UI
+usage_examples.py        # standalone scripts: batch processing, streaming, DB storage, confidence filtering
+requirements.txt
+CLAUDE.md                 # architecture reference for AI coding assistants
+src/
+├── agent.py              # OrderExtractionPipeline — orchestrates the extraction pipeline
+├── pdf_processor.py       # PDF text/table extraction, chunking, upload validation
+├── schema.py              # Pydantic models (Order, OrderItem, ExtractionResult)
+├── tools.py                # regex/heuristic extraction, validation, confidence scoring
+├── prompts.py               # the one LLM prompt template
+├── config.py                 # env-var-driven settings
+└── database.py                # optional SQLite persistence
+tests/
+├── test_tools.py           # unit tests, no Ollama
+├── test_schema.py           # unit tests, no Ollama
+├── test_agent_pdf_chunking.py  # unit tests, mocked LLM
+├── test_agent.py             # integration smoke test, needs live Ollama
+└── sample_inputs/             # sample email/order/WhatsApp-style text files
+docs/
+└── ARCHITECTURE.md          # deeper technical reference (data flow, components, full API)
 ```
 
-## 📈 Performance Tips
+## Further reading
 
-1. **Batch Processing:** Process multiple documents in sequence
-2. **Caching:** Enable LangChain caching for repeated queries
-3. **Model Selection:** Use `llama3.2:1b` for faster processing
-4. **Chunk Optimization:** Tune PDF chunk size based on document type
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — full architecture and API reference
+- [Ollama documentation](https://ollama.com/docs)
+- [LangChain documentation](https://python.langchain.com/)
+- [Streamlit documentation](https://docs.streamlit.io/)
+- [Pydantic documentation](https://docs.pydantic.dev/)
 
-## 🔐 Security Notes
+## License
 
-- All processing happens locally (no data sent to external APIs)
-- Ollama runs on localhost by default
-- Consider adding authentication for production deployments
-- Sanitize file uploads in production
+MIT — use and modify freely.
 
-## 📝 License
+## Contributing
 
-MIT License - Feel free to use and modify for your needs.
-
-## 🤝 Contributing
-
-Contributions welcome! Areas for improvement:
-- Additional document format support (DOCX, Excel)
-- Multi-language support
-- Advanced validation rules
-- UI/UX enhancements
-- Performance optimizations
-
-## 📞 Support
-
-For issues:
-1. Check logs in `logs/agent.log`
-2. Enable debug mode in Streamlit UI
-3. Verify Ollama is running and model is loaded
-
-## 🎓 Learn More
-
-- [LangChain Documentation](https://python.langchain.com/)
-- [Ollama Documentation](https://ollama.com/docs)
-- [Streamlit Documentation](https://docs.streamlit.io/)
-- [Llama 3.2 Model Card](https://ollama.com/library/llama3.2)
-
----
-
-**Built with ❤️ using Ollama, LangChain, and Streamlit**
+Areas that could use work: additional document formats (DOCX, Excel), non-English/non-US input support (the
+regex tools currently assume `$`, `MM/DD/YYYY`-ish dates, and English labels), LLM-judged confidence scoring
+as an alternative to the current substring-match heuristic.

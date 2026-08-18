@@ -11,7 +11,7 @@ from pathlib import Path
 # Add project to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.agent import OrderExtractionAgent
+from src.agent import OrderExtractionPipeline
 from src.database import OrderDatabase
 
 
@@ -22,7 +22,7 @@ def example_1_basic_extraction():
     print("=" * 80 + "\n")
     
     # Initialize agent
-    agent = OrderExtractionAgent()
+    agent = OrderExtractionPipeline()
     
     # Sample order text
     text = """
@@ -59,7 +59,7 @@ def example_2_pdf_processing():
     print("EXAMPLE 2: PDF Processing")
     print("=" * 80 + "\n")
     
-    agent = OrderExtractionAgent()
+    agent = OrderExtractionPipeline()
     
     # Check if sample PDF exists
     pdf_path = Path("tests/sample_inputs/sample_invoice.pdf")
@@ -83,7 +83,7 @@ def example_3_streaming():
     print("EXAMPLE 3: Streaming Extraction")
     print("=" * 80 + "\n")
     
-    agent = OrderExtractionAgent()
+    agent = OrderExtractionPipeline()
     
     text = """
     Purchase Order: PO-2024-123
@@ -128,7 +128,7 @@ def example_4_database_storage():
     print("EXAMPLE 4: Database Storage")
     print("=" * 80 + "\n")
     
-    agent = OrderExtractionAgent()
+    agent = OrderExtractionPipeline()
     db = OrderDatabase("database/example_orders.db")
     
     # Extract order
@@ -167,7 +167,7 @@ def example_5_batch_processing():
     print("EXAMPLE 5: Batch Processing")
     print("=" * 80 + "\n")
     
-    agent = OrderExtractionAgent()
+    agent = OrderExtractionPipeline()
     
     # Multiple orders
     orders = [
@@ -207,7 +207,7 @@ def example_6_custom_validation():
     print("EXAMPLE 6: Custom Validation")
     print("=" * 80 + "\n")
     
-    agent = OrderExtractionAgent()
+    agent = OrderExtractionPipeline()
     
     text = "Order: 100 expensive items @ $10000 each from Suspicious Customer"
     
@@ -248,7 +248,7 @@ def example_7_confidence_filtering():
     print("EXAMPLE 7: Confidence-Based Filtering")
     print("=" * 80 + "\n")
     
-    agent = OrderExtractionAgent()
+    agent = OrderExtractionPipeline()
     
     # Orders with varying clarity
     test_orders = [
